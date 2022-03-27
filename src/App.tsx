@@ -49,10 +49,15 @@ function Console(props: {text: string}) {
   );
 }
 
+async function apiCall(query: string) {
+  const response = await fetch(process.env.REACT_APP_BACKEND_ENDPOINT + query, {method: "GET"});
+  return await response.json();
+}
+
 function Calculator() {
   const [equation, setEquation] = useState('0');
 
-  function calculate(s: string) {
+  async function calculate(s: string) {
     if (isOperator(s[s.length - 1])) {
       return;
     }
@@ -74,11 +79,13 @@ function Calculator() {
           case '-':
             stack.push(-n);
             break;
-          case 'x':       //  replace with api
-            stack[back] = stack[back] * n;
+          case 'x':
+            const multiquery = `/multiply?a=${stack[back]}&b=${n}`;
+            stack[back] = (await apiCall(multiquery)).result;
             break;
-          case '/':       //  replace with api
-            stack[back] = stack[back] / n;
+          case '/':
+            const divquery = `/divide?a=${stack[back]}&b=${n}`;
+            stack[back] = (await apiCall(divquery)).result;
             break;
         }
         if (i === s.length) {
@@ -93,8 +100,15 @@ function Calculator() {
         }
       }
     }
-    //  replace with api
-    const result = stack.reduce((prev, curr) => prev + curr);
+    
+    let result = 0;
+    for (let i = 0; i < stack.length; i++) {
+      const query = `/plus?a=${result}&b=${stack[i]}`;
+      result = (await apiCall(query)).result;
+    }
+
+    const validateQuery = `/validate?equation=${encodeURIComponent(s)}&answer=${result}`
+    await apiCall(validateQuery);
     setEquation(String(result));
   }
 
