@@ -91,12 +91,9 @@ function Calculator() {
         if (i === s.length) {
           break;
         }
+        operator = s[i];
         if (i !== s.length && s[i + 1] === '-') {
-          stack[back] *= -1;
-          operator = s[i];
           i++;
-        } else {
-          operator = s[i];
         }
       }
     }
@@ -107,7 +104,8 @@ function Calculator() {
       result = (await apiCall(query)).result;
     }
 
-    const validateQuery = `/validate?equation=${encodeURIComponent(s)}&answer=${result}`
+    const validEquation = s.replace(/x/g, '*');
+    const validateQuery = `/validate?equation=${encodeURIComponent(validEquation)}&answer=${result}`
     await apiCall(validateQuery);
     setEquation(String(result));
   }
