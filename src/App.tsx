@@ -19,6 +19,28 @@ function TextButton(props: ButtonProp) {
   );
 }
 
+function ACButton(props: ButtonProp) {
+  return (
+    <button 
+      className={`Button ButtonLeft`}
+      onClick={props.onclick}
+    >
+      {props.text}
+    </button>
+  );
+}
+
+function EqualButton(props: ButtonProp) {
+  return (
+    <button 
+      className={`Button ButtonRight`}
+      onClick={props.onclick}
+    >
+      {props.text}
+    </button>
+  );
+}
+
 function Console(props: {text: string}) {
   return (
     <div className='Console'>
@@ -28,22 +50,20 @@ function Console(props: {text: string}) {
 }
 
 function Calculator() {
-  const [equation, setEquation] = useState('');
+  const [equation, setEquation] = useState('0');
 
   function calculate(s: string) {
+    if (isOperator(s[s.length - 1])) {
+      return;
+    }
+
     let prev = 0;
-    const stack = new Array<number | string>();
+    const stack = new Array<number>();
     let operator = '+';
     for (let i = 0; i <= s.length; i++) {
       if ( i === s.length || 
         s[i] === 'x' || s[i] === '/' || 
-        s[i] === '+' || s[i] === '-' || 
-        s[i] === '(' || s[i] === ')') {
-        if (prev === i) {
-          // error equation
-          setEquation('ERR');
-          return;
-        }
+        s[i] === '+' || s[i] === '-') {
         const n = Number(s.slice(prev, i));
         prev = i + 1;
         const back = stack.length - 1;
@@ -54,22 +74,74 @@ function Calculator() {
           case '-':
             stack.push(-n);
             break;
-          case 'x':
-            stack[back] = Number(stack[back]) * n;
+          case 'x':       //  replace with api
+            stack[back] = stack[back] * n;
             break;
-          case '/':
-            stack[back] = Number(stack[back]) / n;
+          case '/':       //  replace with api
+            stack[back] = stack[back] / n;
             break;
         }
         if (i === s.length) {
           break;
         }
-        operator = s[i];
+        if (i !== s.length && s[i + 1] === '-') {
+          stack[back] *= -1;
+          operator = s[i];
+          i++;
+        } else {
+          operator = s[i];
+        }
       }
     }
-
-    const result = stack.reduce((prev, curr) => Number(prev) + Number(curr));
+    //  replace with api
+    const result = stack.reduce((prev, curr) => prev + curr);
     setEquation(String(result));
+  }
+
+  function isOperator(s: string) {
+    if (s === '+' || s === '-' || s === 'x' || s === '/') {
+      return true;
+    }
+    return false;
+  }
+
+  function updateEquation(s: string) {
+    if (s.length === 0) {
+      setEquation('0');
+      return;
+    }
+    // remove leading zero
+    if (s.length > 1 && s[0] === '0' && !isNaN(Number(s.slice(1, 2)))) {
+      s = s.slice(1, s.length);
+    }
+
+    // remove conequence operator
+    if (s.length > 2 && isOperator(s[s.length - 1]) && 
+        isOperator(s[s.length - 2]) && isOperator(s[s.length - 3])) {
+      s = s.slice(0, s.length - 1);
+    } else if (s.length > 1 && isOperator(s[s.length - 1]) && isOperator(s[s.length - 2])) {
+      if (s[s.length - 1] === '-') {
+        if (s[s.length - 2] === '+' || s[s.length - 2] === '-') {
+          s = s.slice(0, s.length - 2) + '-';
+        }
+      } else {
+        s = s.slice(0, s.length - 2) + s[s.length - 1];
+      }
+    }
+    
+    setEquation(s);
+  }
+
+  function containDot(s: string) {
+    for (let i = s.length - 1; i >= 0; i--) {
+      if (s[i] === '+' || s[i] === '-' || s[i] === 'x' || s[i] === '/') {
+        return false;
+      }
+      if (s[i] === '.') {
+        return true;
+      }
+    }
+    return false;
   }
 
   return (
@@ -79,82 +151,78 @@ function Calculator() {
       />
       <div className='ButtonGrid'>
         <TextButton
-          text="AC"
-          onclick={() => setEquation('')}
-        />
-        <TextButton
-          text="("
-          onclick={() => setEquation(equation + '(')}
-        />
-        <TextButton
-          text=")"
-          onclick={() => setEquation(equation + ')')}
-        />
-        <TextButton
-          text="/"
-          onclick={() => setEquation(equation + '/')}
-        />
-        <TextButton
           text="1"
-          onclick={() => setEquation(equation + '1')}
+          onclick={() => updateEquation(equation + '1')}
         />
         <TextButton
           text="2"
-          onclick={() => setEquation(equation + '2')}
+          onclick={() => updateEquation(equation + '2')}
         />
         <TextButton
           text="3"
-          onclick={() => setEquation(equation + '3')}
+          onclick={() => updateEquation(equation + '3')}
         />
         <TextButton
-          text="x"
-          onclick={() => setEquation(equation + 'x')}
+          text="/"
+          onclick={() => updateEquation(equation + '/')}
         />
         <TextButton
           text="4"
-          onclick={() => setEquation(equation + '4')}
+          onclick={() => updateEquation(equation + '4')}
         />
         <TextButton
           text="5"
-          onclick={() => setEquation(equation + '5')}
+          onclick={() => updateEquation(equation + '5')}
         />
         <TextButton
           text="6"
-          onclick={() => setEquation(equation + '6')}
+          onclick={() => updateEquation(equation + '6')}
         />
         <TextButton
-          text="-"
-          onclick={() => setEquation(equation + '-')}
+          text="x"
+          onclick={() => updateEquation(equation + 'x')}
         />
         <TextButton
           text="7"
-          onclick={() => setEquation(equation + '7')}
+          onclick={() => updateEquation(equation + '7')}
         />
         <TextButton
           text="8"
-          onclick={() => setEquation(equation + '8')}
+          onclick={() => updateEquation(equation + '8')}
         />
         <TextButton
           text="9"
-          onclick={() => setEquation(equation + '9')}
+          onclick={() => updateEquation(equation + '9')}
         />
         <TextButton
-          text="+"
-          onclick={() => setEquation(equation + '+')}
+          text="-"
+          onclick={() => updateEquation(equation + '-')}
         />
         <TextButton
           text="0"
-          onclick={() => setEquation(equation + '0')}
+          onclick={() => updateEquation(equation + '0')}
         />
         <TextButton
           text="."
-          onclick={() => setEquation(equation + '.')}
+          onclick={() => {
+            if (!containDot(equation)) {
+              updateEquation(equation + '.');
+            }
+          }}
         />
         <TextButton
           text="del"
-          onclick={() => setEquation(equation.slice(0, -1))}
+          onclick={() => updateEquation(equation.slice(0, -1))}
         />
         <TextButton
+          text="+"
+          onclick={() => updateEquation(equation + '+')}
+        />
+        <ACButton
+          text="AC"
+          onclick={() => updateEquation('0')}
+        />
+        <EqualButton
           text="="
           onclick={() => calculate(equation)}
         />
